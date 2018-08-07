@@ -2,7 +2,9 @@
 //     http://underscorejs.org
 //     (c) 2009-2018 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
+//     中文注释：华超（chaohua@outlook.com）
 
+// 通过立即执行函数，防止对全局变量进行污染
 (function() {
 
   // Baseline setup
@@ -11,12 +13,14 @@
   // Establish the root object, `window` (`self`) in the browser, `global`
   // on the server, or `this` in some virtual machines. We use `self`
   // instead of `window` for `WebWorker` support.
+  // root 获取当前环境（浏览器、WebWorker、node、微信小程序等）的全局对象。
   var root = typeof self == 'object' && self.self === self && self ||
             typeof global == 'object' && global.global === global && global ||
             this ||
             {};
 
   // Save the previous value of the `_` variable.
+  // 保存当前环境中已有的 '_' 的值，可进行恢复
   var previousUnderscore = root._;
 
   // Save bytes in the minified (but not gzipped) version:
