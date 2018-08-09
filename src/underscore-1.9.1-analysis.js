@@ -155,24 +155,34 @@
   // on. This helper accumulates all remaining arguments past the function’s
   // argument length (or an explicit `startIndex`), into an array that becomes
   // the last argument. Similar to ES6’s "rest parameter".
+  // 在 ES5 中 实现了 ES6 的 rest parameter，即实现松散参数，使部分方法调用更灵活。
   var restArguments = function(func, startIndex) {
+    // 函数的 length 属性是函数的形参个数，即定义函数时的参数个数。
+    // 函数的 arguments.length 是函数的实参个数，即调用函数时真正传入的参数个数。
     startIndex = startIndex == null ? func.length - 1 : +startIndex;
+    // 返回一个支持 rest 参数的函数。
     return function() {
+      // 保证参数为正。
       var length = Math.max(arguments.length - startIndex, 0),
           rest = Array(length),
           index = 0;
+      // 获得 rest 参数数组，例 rest = [3, 4, 5]。
       for (; index < length; index++) {
         rest[index] = arguments[index + startIndex];
       }
+      // 根据rest参数不同, 分情况调用函数, 提高性能（apply => call）。
       switch (startIndex) {
         case 0: return func.call(this, rest);
         case 1: return func.call(this, arguments[0], rest);
         case 2: return func.call(this, arguments[0], arguments[1], rest);
       }
+      // 更多参数的情况，使用 apply。
+      // 组合最终的参数集合,例 args = [1, 2, undefined]。
       var args = Array(startIndex + 1);
       for (index = 0; index < startIndex; index++) {
         args[index] = arguments[index];
       }
+      // 例 args = [1, 2, [3, 4, 5]]。
       args[startIndex] = rest;
       return func.apply(this, args);
     };
