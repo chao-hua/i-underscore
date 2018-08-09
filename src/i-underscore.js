@@ -164,6 +164,17 @@
         return _;
     }
 
+    // 方法测试
+    _.map = function(obj, iteratee, context) {
+        var length = obj.length,
+            results = Array(length);
+        for (var index = 0; index < length; index++) {
+            results[index] = iteratee.call(context, obj[index], index, obj)
+        }
+        return results;
+    };
+
+
     // 将前面定义的 underscore 方法添加给包装过的对象，即添加到原型上。
     _.mixin(_);
 

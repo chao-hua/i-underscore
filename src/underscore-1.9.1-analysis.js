@@ -94,20 +94,30 @@
   // Internal function that returns an efficient (for current engines) version
   // of the passed-in callback, to be repeatedly applied in other Underscore
   // functions.
+  // 对回调函数的优化。
   var optimizeCb = function(func, context, argCount) {
+    // 如果没有传入 context，就返回 func 函数。
+    // void 0 会返回纯正的 undefined，这样做避免 undefined 已经被污染带来的判定失效。
     if (context === void 0) return func;
+    // 根据参数个数，分别处理。
+    // 比直接使用 func.apply(context, arguments) 好处：1.call 比 apply 性能更高；2.避免使用 arguments，提高性能。
     switch (argCount == null ? 3 : argCount) {
+      // 1个参数的情况，只需要值，例如 times 函数。
       case 1: return function(value) {
         return func.call(context, value);
       };
+      // 2个参数的情况，没用被用到，所以在新版中被删除了。
       // The 2-argument case is omitted because we’re not using it.
+      // 3个参数的情况，值、索引、被迭代的对象，用于一些迭代器函数，例如 map 函数等。
       case 3: return function(value, index, collection) {
         return func.call(context, value, index, collection);
       };
+      // 4个参数的情况，累加器、值、索引、被迭代的对象，用于 reduce 和 reduceRight 函数。
       case 4: return function(accumulator, value, index, collection) {
         return func.call(context, accumulator, value, index, collection);
       };
     }
+    // 其他情况。
     return function() {
       return func.apply(context, arguments);
     };
@@ -118,17 +128,24 @@
   // An internal function to generate callbacks that can be applied to each
   // element in a collection, returning the desired result — either `identity`,
   // an arbitrary callback, a property matcher, or a property accessor.
+  // 对回调操作（不仅是函数）的分类处理。
   var cb = function(value, context, argCount) {
+    // 判断是否使用默认迭代器，如果外部改写了 _.iteratee，则按照自定义的函数进行处理。
     if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
+    // 没有处理操作时，直接返回未被处理的数据本身。
     if (value == null) return _.identity;
+    // 处理操作是函数时，通过 optimizeCb 优化处理函数。
     if (_.isFunction(value)) return optimizeCb(value, context, argCount);
+    // 处理操作是对象类型时，通过 _.matcher 来进行对象匹配。
     if (_.isObject(value) && !_.isArray(value)) return _.matcher(value);
+    // 处理操作是基本类型的值时，返回对应的属性值。
     return _.property(value);
   };
 
   // External wrapper for our callback generator. Users may customize
   // `_.iteratee` if they want additional predicate/iteratee shorthand styles.
   // This abstraction hides the internal-only argCount argument.
+  // 默认迭代器，保存 cb 的引用，用于判断是否改写了默认的迭代器。
   _.iteratee = builtinIteratee = function(value, context) {
     return cb(value, context, Infinity);
   };
@@ -171,6 +188,7 @@
     return result;
   };
 
+  // 根据属性名，返回对象的值。
   var shallowProperty = function(key) {
     return function(obj) {
       return obj == null ? void 0 : obj[key];
@@ -181,6 +199,7 @@
     return obj != null && hasOwnProperty.call(obj, path);
   }
 
+  // 根据 path 数组，深度获取 obj 中对应的值。
   var deepGet = function(obj, path) {
     var length = path.length;
     for (var i = 0; i < length; i++) {
@@ -1205,6 +1224,7 @@
   };
 
   // Returns whether an object has a given set of `key:value` pairs.
+  // 校验一个 object 是否满足匹配的键值对。
   _.isMatch = function(object, attrs) {
     var keys = _.keys(attrs), length = keys.length;
     if (object == null) return !length;
@@ -1424,13 +1444,14 @@
 
   // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
   // previous owner. Returns a reference to the Underscore object.
-  // 将之前的 _ 恢复，返回 underscorce 的关联关系，指向一个新的变量
+  // 将之前的 _ 恢复，返回 underscorce 的关联关系，指向一个新的变量。
   _.noConflict = function() {
     root._ = previousUnderscore;
     return this;
   };
 
   // Keep the identity function around for default iteratees.
+  // 返回传入的数据。
   _.identity = function(value) {
     return value;
   };
@@ -1446,10 +1467,13 @@
 
   // Creates a function that, when passed an object, will traverse that object’s
   // properties down the given `path`, specified as an array of keys or indexes.
+  // 根据参数从对象中取值。
   _.property = function(path) {
+    // 不是数组。
     if (!_.isArray(path)) {
       return shallowProperty(path);
     }
+    // 数组时，可以根据数组来深度取值。
     return function(obj) {
       return deepGet(obj, path);
     };
@@ -1467,6 +1491,7 @@
 
   // Returns a predicate for checking whether an object has a given set of
   // `key:value` pairs.
+  // 返回一个属性检测函数，检测某个对象是否具有指定属性。
   _.matcher = _.matches = function(attrs) {
     attrs = _.extendOwn({}, attrs);
     return function(obj) {
