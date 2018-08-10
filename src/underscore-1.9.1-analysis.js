@@ -1461,23 +1461,27 @@
   };
 
   // Keep the identity function around for default iteratees.
-  // 返回传入的数据。
+  // 返回值本身。
   _.identity = function(value) {
     return value;
   };
 
   // Predicate-generating functions. Often useful outside of Underscore.
+  // 返回一个函数，返回的函数都够返回 value 自身。
+  // 可以用于返回一些固定值得情况，使语义更明确。
   _.constant = function(value) {
     return function() {
       return value;
     };
   };
 
+  // 空函数。
+  // 可以用来为某个对象的方法赋值初始值，从而减少判断。
   _.noop = function(){};
 
   // Creates a function that, when passed an object, will traverse that object’s
   // properties down the given `path`, specified as an array of keys or indexes.
-  // 根据参数从对象中取值。
+  // 返回能某个对象指定属性的值。
   _.property = function(path) {
     // 不是数组。
     if (!_.isArray(path)) {
@@ -1490,6 +1494,8 @@
   };
 
   // Generates a function for a given object that returns a given property.
+  // 返回能够获得某个对象指定属性的方法。
+  // 可以直接用来作为回调函数，例 _.map([], (key) => person(key)) =>  _.map([], _.propertyOf(person))。
   _.propertyOf = function(obj) {
     if (obj == null) {
       return function(){};
@@ -1518,6 +1524,7 @@
   };
 
   // Return a random integer between min and max (inclusive).
+  // 返回指定区间的随机数，注意结果是闭区间：[min, max]。
   _.random = function(min, max) {
     if (max == null) {
       max = min;
@@ -1527,6 +1534,7 @@
   };
 
   // A (possibly faster) way to get the current timestamp as an integer.
+  // 获得当前的时间戳。
   _.now = Date.now || function() {
     return new Date().getTime();
   };
