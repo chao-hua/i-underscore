@@ -242,14 +242,18 @@
   };
 
   // Collection Functions
+  // 集合方法（25个）
   // --------------------
 
   // The cornerstone, an `each` implementation, aka `forEach`.
   // Handles raw objects in addition to array-likes. Treats all
   // sparse array-likes as if they were dense.
+  // 遍历集合中每一个元素，进行相应回调操作，返回原集合。
   _.each = _.forEach = function(obj, iteratee, context) {
+    // 优化回调函数。
     iteratee = optimizeCb(iteratee, context);
     var i, length;
+    // 区分类数组与对象。
     if (isArrayLike(obj)) {
       for (i = 0, length = obj.length; i < length; i++) {
         iteratee(obj[i], i, obj);
@@ -260,12 +264,16 @@
         iteratee(obj[keys[i]], keys[i], obj);
       }
     }
+    // 返回对象自身, 以便进行链式构造。
     return obj;
   };
 
   // Return the results of applying the iteratee to each element.
+  // 遍历集合中每一个元素，进行相应回调操作，将结果保存到新的数组中，并返回。
   _.map = _.collect = function(obj, iteratee, context) {
+    // 优化回调操作。
     iteratee = cb(iteratee, context);
+    // 兼容类数组和对象的写法。
     var keys = !isArrayLike(obj) && _.keys(obj),
         length = (keys || obj).length,
         results = Array(length);
@@ -273,6 +281,7 @@
       var currentKey = keys ? keys[index] : index;
       results[index] = iteratee(obj[currentKey], currentKey, obj);
     }
+    // 返回回调操作处理后的新数组。
     return results;
   };
 
