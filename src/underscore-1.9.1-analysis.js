@@ -286,6 +286,7 @@
   };
 
   // Create a reducing function iterating left or right.
+  // reduce函数的工厂函数, 用于生成一个reducer, 通过 dir（1：正序；-1：倒序） 决定reduce的方向。
   var createReduce = function(dir) {
     // Wrap code that reassigns argument variables in a separate function than
     // the one that accesses `arguments.length` to avoid a perf hit. (#1991)
@@ -293,28 +294,35 @@
       var keys = !isArrayLike(obj) && _.keys(obj),
           length = (keys || obj).length,
           index = dir > 0 ? 0 : length - 1;
+      // 没有初始化 memo，默认位第首个元素（reduce：第一个元素；reduceRight：最后一个元素）。
       if (!initial) {
         memo = obj[keys ? keys[index] : index];
         index += dir;
       }
       for (; index >= 0 && index < length; index += dir) {
         var currentKey = keys ? keys[index] : index;
+        // 执行回调操作，每次刷新当前的值。
         memo = iteratee(memo, obj[currentKey], currentKey, obj);
       }
+      // 返回最终结果。
       return memo;
     };
 
     return function(obj, iteratee, memo, context) {
+      // 判断是否初始化 memo（累计的初始值）。
       var initial = arguments.length >= 3;
+      // optimizeCb( , , 4) 对应就是 reduce 的回调优化。
       return reducer(obj, optimizeCb(iteratee, context, 4), memo, initial);
     };
   };
 
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
+  // 正序（从左往右）reduce。
   _.reduce = _.foldl = _.inject = createReduce(1);
 
   // The right-associative version of reduce, also known as `foldr`.
+  // 倒序（从右往左）reduce。
   _.reduceRight = _.foldr = createReduce(-1);
 
   // Return the first value which passes a truth test. Aliased as `detect`.
