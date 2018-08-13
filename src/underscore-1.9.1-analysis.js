@@ -50,7 +50,7 @@
       nativeCreate = Object.create;
 
   // Naked function reference for surrogate-prototype-swapping.
-  // TODO
+  // constructor 的缩写，这个空的构造函数用于对象创建。避免每次调用 baseCreate 都要创建空的构造函数。
   var Ctor = function(){};
 
   // Create a safe reference to the Underscore object for use below.
@@ -189,22 +189,30 @@
   };
 
   // An internal function for creating a new object that inherits from another.
+  // 根据已知的对象 prototype，返回一个继承的子对象。
   var baseCreate = function(prototype) {
     if (!_.isObject(prototype)) return {};
+    // 若存在 ES5 的 Object.create 就是会用该方法。
     if (nativeCreate) return nativeCreate(prototype);
+    // 不存在，就简易实现 create 内部逻辑（不支持属性列表）。
     Ctor.prototype = prototype;
+    // TODO：new Ctor 之后不加括号，看似无区别（不确定），但这里这样用优势是什么？
     var result = new Ctor;
+    // 还原Ctor原型，防止内存泄漏。
     Ctor.prototype = null;
     return result;
   };
 
-  // 根据属性名，返回对象的值。
+  // 根据属性名，返回获取对象的属性的函数（非常灵活）。
+  // 例： var getName = shallowProperty('name');
+  //      var name =  getName(obj);
   var shallowProperty = function(key) {
     return function(obj) {
       return obj == null ? void 0 : obj[key];
     };
   };
 
+  // 根据属性名，判断是否存在改属性。
   var has = function(obj, path) {
     return obj != null && hasOwnProperty.call(obj, path);
   }
@@ -223,8 +231,11 @@
   // should be iterated as an array or as an object.
   // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
   // Avoids a very nasty iOS 8 JIT bug on ARM-64. #2094
+  // 最大数组长度, 避免 IOS 8 出现 bug。
   var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+  // 获取对象 length 属性的值。
   var getLength = shallowProperty('length');
+  // 判断集合是否是近似数组的（含有符合条件的 length 属性）。
   var isArrayLike = function(collection) {
     var length = getLength(collection);
     return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
