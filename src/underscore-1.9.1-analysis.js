@@ -249,6 +249,7 @@
   // Handles raw objects in addition to array-likes. Treats all
   // sparse array-likes as if they were dense.
   // 遍历集合中每一个元素，进行相应回调操作，返回原集合。
+  // 与 ES5 中 Array.prototype.forEach 使用方法类似。
   _.each = _.forEach = function(obj, iteratee, context) {
     // 优化回调函数。
     iteratee = optimizeCb(iteratee, context);
@@ -270,6 +271,7 @@
 
   // Return the results of applying the iteratee to each element.
   // 遍历集合中每一个元素，进行相应回调操作，将结果保存到新的数组中，并返回。
+  // 与 ES5 中 Array.prototype.map 使用方法类似。
   _.map = _.collect = function(obj, iteratee, context) {
     // 优化回调操作。
     iteratee = cb(iteratee, context);
@@ -318,15 +320,18 @@
 
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
-  // 正序（从左往右）reduce。
+  // 正序（从左往右）规约。
+  // 与 ES5 中 Array.prototype.reduce 使用方法类似。
   _.reduce = _.foldl = _.inject = createReduce(1);
 
   // The right-associative version of reduce, also known as `foldr`.
-  // 倒序（从右往左）reduce。
+  // 倒序（从右往左）规约。
+  // 与 ES5 中 Array.prototype.reduceRight 使用方法类似。
   _.reduceRight = _.foldr = createReduce(-1);
 
   // Return the first value which passes a truth test. Aliased as `detect`.
   // 返回集合中第一个满足条件（predicate 函数返回 true）的元素。
+  // 与 ES6 中 Array.prototype.find 使用方法类似。
   _.find = _.detect = function(obj, predicate, context) {
     var keyFinder = isArrayLike(obj) ? _.findIndex : _.findKey;
     var key = keyFinder(obj, predicate, context);
@@ -336,6 +341,7 @@
   // Return all the elements that pass a truth test.
   // Aliased as `select`.
   // 返回集合中所有满足条件的元素的数组。
+  // 与 ES5 中 Array.prototype.filter 使用方法类似。
   _.filter = _.select = function(obj, predicate, context) {
     var results = [];
     predicate = cb(predicate, context);
@@ -346,18 +352,23 @@
   };
 
   // Return all the elements for which a truth test fails.
+  // 返回集合中所有不满足条件元素的数组。
+  // 是 _.filter 方法的补集。
   _.reject = function(obj, predicate, context) {
     return _.filter(obj, _.negate(cb(predicate)), context);
   };
 
   // Determine whether all of the elements match a truth test.
   // Aliased as `all`.
+  // 判断集合中的每一个元素，是否都满足判断条件。全部满足，返回 true；一个不满足，返回 false;
+  // 与 ES5 中的 Array.prototype.every 方法类似。
   _.every = _.all = function(obj, predicate, context) {
     predicate = cb(predicate, context);
     var keys = !isArrayLike(obj) && _.keys(obj),
         length = (keys || obj).length;
     for (var index = 0; index < length; index++) {
       var currentKey = keys ? keys[index] : index;
+      // 如果有一个不满足 predicate 中的条件，返回 false;
       if (!predicate(obj[currentKey], currentKey, obj)) return false;
     }
     return true;
@@ -365,12 +376,15 @@
 
   // Determine if at least one element in the object matches a truth test.
   // Aliased as `any`.
+  // 判断集合中的是否有一个满足判断条件。有一个或以上满足，返回 true；全部不满足，返回 false;
+  // 与 ES5 中 Array.prototype.some 方法类似。
   _.some = _.any = function(obj, predicate, context) {
     predicate = cb(predicate, context);
     var keys = !isArrayLike(obj) && _.keys(obj),
         length = (keys || obj).length;
     for (var index = 0; index < length; index++) {
       var currentKey = keys ? keys[index] : index;
+      // 如果有一个满足 predicate 中的条件，返回 true;
       if (predicate(obj[currentKey], currentKey, obj)) return true;
     }
     return false;
@@ -378,6 +392,8 @@
 
   // Determine if the array or object contains a given item (using `===`).
   // Aliased as `includes` and `include`.
+  // 检测一个集合是否包含一个指定的元素。
+  // 与 ES6 中 Array.prototype.includes 方法类似。
   _.contains = _.includes = _.include = function(obj, item, fromIndex, guard) {
     if (!isArrayLike(obj)) obj = _.values(obj);
     if (typeof fromIndex != 'number' || guard) fromIndex = 0;
@@ -780,6 +796,7 @@
   };
 
   // Generator function to create the indexOf and lastIndexOf functions.
+  // 创建一个查询某位置元素的 Finder，通过 dir（1：正序；-1：倒序）决定查询的方向。
   var createIndexFinder = function(dir, predicateFind, sortedIndex) {
     return function(array, item, idx) {
       var i = 0, length = getLength(array);
@@ -808,7 +825,10 @@
   // or -1 if the item is not included in the array.
   // If the array is large and already in sort order, pass `true`
   // for **isSorted** to use binary search.
+  // 从左到右查找，返回第一个对应元素的位置，查不到则返回-1。
+  // 与 ES6 中 Array.prototype.findIndex 使用方法类似。
   _.indexOf = createIndexFinder(1, _.findIndex, _.sortedIndex);
+  // 从右到左查找，返回第一个对应元素的位置，查不到则返回-1。
   _.lastIndexOf = createIndexFinder(-1, _.findLastIndex);
 
   // Generate an integer Array containing an arithmetic progression. A port of
@@ -1013,6 +1033,7 @@
   };
 
   // Returns a negated version of the passed-in predicate.
+  // 返回 predicate 迭代结果的的补集（结果刚好相反）。
   _.negate = function(predicate) {
     return function() {
       return !predicate.apply(this, arguments);
@@ -1096,6 +1117,7 @@
   // Retrieve the names of an object's own properties.
   // Delegates to **ECMAScript 5**'s native `Object.keys`.
   // 获取对象的自有属性数组（包括: 自身的属性、可遍历属性;不包括: 继承的属性、不可遍历属性）。
+  // 与 ES5 中 Object.keys 方法类似。
   _.keys = function(obj) {
     if (!_.isObject(obj)) return [];
     // 如果存在原生的 Object.keys 方法，直接调用。
@@ -1110,16 +1132,20 @@
   };
 
   // Retrieve all the property names of an object.
+  // 获取对象的所有属性数组（包括: 自身的属性、继承的属性、可遍历属性、不可遍历属性）。
   _.allKeys = function(obj) {
     if (!_.isObject(obj)) return [];
     var keys = [];
     for (var key in obj) keys.push(key);
     // Ahem, IE < 9.
+    // IE < 9 的环境下。
     if (hasEnumBug) collectNonEnumProps(obj, keys);
     return keys;
   };
 
   // Retrieve the values of an object's properties.
+  // 获取对象的自有属性对应值的数组（包括: 自身的属性、可遍历属性;不包括: 继承的属性、不可遍历属性）。
+  // 与 ES6 中 Object.values 方法类似。
   _.values = function(obj) {
     var keys = _.keys(obj);
     var length = keys.length;
