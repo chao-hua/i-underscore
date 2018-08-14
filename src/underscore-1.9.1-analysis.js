@@ -401,6 +401,7 @@
   };
 
   // Invoke a method (with arguments) on every item in a collection.
+  // 迭代集合，深度遍历集合中每一个元素，进行相应回调操作。
   _.invoke = restArguments(function(obj, path, args) {
     var contextPath, func;
     if (_.isFunction(path)) {
@@ -423,18 +424,21 @@
   });
 
   // Convenience version of a common use case of `map`: fetching a property.
+  // 获取集合中对应属性（key）的值的数组。
   _.pluck = function(obj, key) {
     return _.map(obj, _.property(key));
   };
 
   // Convenience version of a common use case of `filter`: selecting only objects
   // containing specific `key:value` pairs.
+  // 获取集合中满足条件（attrs：对象形式，键值对）元素的数组。
   _.where = function(obj, attrs) {
     return _.filter(obj, _.matcher(attrs));
   };
 
   // Convenience version of a common use case of `find`: getting the first object
   // containing specific `key:value` pairs.
+  // 获取集合中满足条件（attrs：对象形式，键值对）的第一个元素。
   _.findWhere = function(obj, attrs) {
     return _.find(obj, _.matcher(attrs));
   };
