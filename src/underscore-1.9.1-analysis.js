@@ -212,7 +212,7 @@
     };
   };
 
-  // 根据属性名，判断是否存在改属性。
+  // 根据属性名，判断对象本身是否存在该属性（去除继承属性）。
   var has = function(obj, path) {
     return obj != null && hasOwnProperty.call(obj, path);
   }
@@ -286,7 +286,7 @@
   };
 
   // Create a reducing function iterating left or right.
-  // reduce函数的工厂函数, 用于生成一个reducer, 通过 dir（1：正序；-1：倒序） 决定reduce的方向。
+  // reduce 函数的工厂函数，用于生成一个 reducer，通过 dir（1：正序；-1：倒序）决定 reduce 的方向。
   var createReduce = function(dir) {
     // Wrap code that reassigns argument variables in a separate function than
     // the one that accesses `arguments.length` to avoid a perf hit. (#1991)
@@ -326,6 +326,7 @@
   _.reduceRight = _.foldr = createReduce(-1);
 
   // Return the first value which passes a truth test. Aliased as `detect`.
+  // 返回集合中第一个满足条件（predicate 函数返回 true）的元素。
   _.find = _.detect = function(obj, predicate, context) {
     var keyFinder = isArrayLike(obj) ? _.findIndex : _.findKey;
     var key = keyFinder(obj, predicate, context);
@@ -334,6 +335,7 @@
 
   // Return all the elements that pass a truth test.
   // Aliased as `select`.
+  // 返回集合中所有满足条件的元素的数组。
   _.filter = _.select = function(obj, predicate, context) {
     var results = [];
     predicate = cb(predicate, context);
@@ -744,12 +746,14 @@
   };
 
   // Generator function to create the findIndex and findLastIndex functions.
+  // 位置预测函数生成器，通过 dir 区分，生成 findIndex 和 findLastIndex 等位置查询函数。
   var createPredicateIndexFinder = function(dir) {
     return function(array, predicate, context) {
       predicate = cb(predicate, context);
       var length = getLength(array);
       var index = dir > 0 ? 0 : length - 1;
       for (; index >= 0 && index < length; index += dir) {
+        // 只取第一次满足条件的位置。
         if (predicate(array[index], index, array)) return index;
       }
       return -1;
@@ -757,7 +761,9 @@
   };
 
   // Returns the first index on an array-like that passes a predicate test.
+  // 正序（从左往右），查找第一次满足条件的位置。
   _.findIndex = createPredicateIndexFinder(1);
+  // 倒序（从右往左），查找第一次满足条件的位置。
   _.findLastIndex = createPredicateIndexFinder(-1);
 
   // Use a comparator function to figure out the smallest index at which
@@ -1057,21 +1063,30 @@
   // ----------------
 
   // Keys in IE < 9 that won't be iterated by `for key in ...` and thus missed.
+  // 判断是否在 IE < 9 的环境中。
+  // IE < 9 下，重写某些属性，依然是不可枚举的，据此来判断是否在 IE < 9 的环境中。
   var hasEnumBug = !{toString: null}.propertyIsEnumerable('toString');
+  // IE < 9 下不能用 for in 来枚举的 key 值集合。
+  // 其实还有个 `constructor` 属性，与这些方法不属于一类，特殊处理。
   var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString',
     'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
 
+  // 获取对象中所有不能枚举的属性。
   var collectNonEnumProps = function(obj, keys) {
     var nonEnumIdx = nonEnumerableProps.length;
     var constructor = obj.constructor;
+    // 如果 构造函数被重写，则 proto 指向该原型，否则指向默认值 Object.prototype。
     var proto = _.isFunction(constructor) && constructor.prototype || ObjProto;
 
     // Constructor is a special case.
+    // 构造函数特殊处理。
+    // 如果有 constructor 且 不在 keys 中，放入 keys。
     var prop = 'constructor';
     if (has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
 
     while (nonEnumIdx--) {
       prop = nonEnumerableProps[nonEnumIdx];
+      // 判断是否是自有属性（重写）obj[prop] !== proto[prop]。
       if (prop in obj && obj[prop] !== proto[prop] && !_.contains(keys, prop)) {
         keys.push(prop);
       }
@@ -1080,12 +1095,16 @@
 
   // Retrieve the names of an object's own properties.
   // Delegates to **ECMAScript 5**'s native `Object.keys`.
+  // 获取对象的自有属性数组（包括: 自身的属性、可遍历属性;不包括: 继承的属性、不可遍历属性）。
   _.keys = function(obj) {
     if (!_.isObject(obj)) return [];
+    // 如果存在原生的 Object.keys 方法，直接调用。
     if (nativeKeys) return nativeKeys(obj);
     var keys = [];
+    // 通过 _.has ，剔除掉非自有属性。
     for (var key in obj) if (has(obj, key)) keys.push(key);
     // Ahem, IE < 9.
+    // IE < 9 的环境下。
     if (hasEnumBug) collectNonEnumProps(obj, keys);
     return keys;
   };
@@ -1186,6 +1205,7 @@
   _.extendOwn = _.assign = createAssigner(_.keys);
 
   // Returns the first key on an object that passes a predicate test.
+  // 通过真值检测函数 predicate 找到对象中第一个满足条件的 key。
   _.findKey = function(obj, predicate, context) {
     predicate = cb(predicate, context);
     var keys = _.keys(obj), key;
