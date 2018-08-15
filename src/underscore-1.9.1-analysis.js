@@ -500,6 +500,7 @@
   };
 
   // Shuffle a collection.
+  // 返回随机乱序的几个副本。
   _.shuffle = function(obj) {
     return _.sample(obj, Infinity);
   };
@@ -508,28 +509,41 @@
   // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
   // If **n** is not specified, returns a single random element.
   // The internal `guard` argument allows it to work with `map`.
+  // 随机返回数组 或 集合中的一个元素（没有参数 n 时）。
   _.sample = function(obj, n, guard) {
+    // 随机返回一个元素。
     if (n == null || guard) {
       if (!isArrayLike(obj)) obj = _.values(obj);
       return obj[_.random(obj.length - 1)];
     }
     var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
     var length = getLength(sample);
+    // 保证 0<= n <= lenght。
     n = Math.max(Math.min(n, length), 0);
     var last = length - 1;
+    // 到 n 截止。
     for (var index = 0; index < n; index++) {
+      // 交换位置。
       var rand = _.random(index, last);
       var temp = sample[index];
       sample[index] = sample[rand];
       sample[rand] = temp;
     }
+    // 返回 n 长度的数组。
     return sample.slice(0, n);
   };
 
   // Sort the object's values by a criterion produced by an iteratee.
+  // 对象集合的排序，根据某个属性排序，类似 sql 语句中的排序。
+  // 与 ES5 中 Array.prototype.sort 使用方法类似。
   _.sortBy = function(obj, iteratee, context) {
     var index = 0;
     iteratee = cb(iteratee, context);
+    // 先通过 _.map 生成新的对象合集。
+    // var iteratee = function(value, key, index, elem) { return elem.x; }
+    // [{x:1},{x:2}] => [{value:{x:1},index:0,criteria:1},{value:{x:1},index:0,criteria:1}]
+    // 再排序 .sort。
+    // 最后 通过 _.pluck([], 'value') 将排好序的对象取出来。
     return _.pluck(_.map(obj, function(value, key, list) {
       return {
         value: value,
@@ -548,8 +562,10 @@
   };
 
   // An internal function used for aggregate "group by" operations.
+  // 根据特定规则，返回分组函数。
   var group = function(behavior, partition) {
     return function(obj, iteratee, context) {
+      // partition 是否是进行划分，即是否是将一个集合一分为二。
       var result = partition ? [[], []] : {};
       iteratee = cb(iteratee, context);
       _.each(obj, function(value, index) {
@@ -562,37 +578,70 @@
 
   // Groups the object's values by a criterion. Pass either a string attribute
   // to group by, or a function that returns the criterion.
+  // 根据 iteratee 为分组依据，对集合进行分组。
+  // 类似 sql 中的 group by 关键字。
+  // _.groupBy(['one', 'two', 'three'], 'length'); => {3: ["one", "two"], 5: ["three"]}
   _.groupBy = group(function(result, value, key) {
+    // 如果已经存在 key 的分组，将符合分组的 value 加入该分组。
+    // 如果不存在，创建该分组，并将 value 放入其中。
     if (has(result, key)) result[key].push(value); else result[key] = [value];
   });
 
   // Indexes the object's values by a criterion, similar to `groupBy`, but for
   // when you know that your index values will be unique.
+  // 根据 iteratee，给集合分配索引，返回索引集合。
+  // _.indexBy([{name: 'moe', age: 80}, {name: 'larry', age: 50}, {name: 'curly', age: 60}], 'age');
+  // => {50 : {name: "larry", age: 50}, 60 : {name: "curly", age: 60}, 80 : {name: "moe", age: 80}}
   _.indexBy = group(function(result, value, key) {
+    // 每个索引都是一个分组。
     result[key] = value;
   });
 
   // Counts instances of an object that group by a certain criterion. Pass
   // either a string attribute to count by, or a function that returns the
   // criterion.
+  // 根据 iteratee 为分组依据，统计集合各个分组的元素个数。
+  // _.countBy(['one', 'two', 'three'], 'length'); => {3: 2, 5: 1}
   _.countBy = group(function(result, value, key) {
+    // 如果已经存在 key 的分组，该分组统计个数 +1 。
+    // 如果不存在，创建该分组，分配个数 1。
     if (has(result, key)) result[key]++; else result[key] = 1;
   });
 
+  // 重要正则。
+  // TODO：未理解
+  // [^\ud800-\udfff]: 表示不包含代理对代码点的所有字符。
+  // [\ud800-\udbff][\udc00-\udfff]: 表示合法的代理对的所有字符。
+  // [\ud800-\udfff]: 表示代理对的代码点（本身不是合法的Unicode字符）。
+  // 参考文献:
+  // [字符编码的那些事](http://licstar.net/archives/tag/utf-8)
+  // [知乎关于underscore这个正则的提问](https://www.zhihu.com/question/38324041)
   var reStrSymbol = /[^\ud800-\udfff]|[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]/g;
   // Safely create a real, live array from anything iterable.
+  // 将伪数组转化成数组。
   _.toArray = function(obj) {
     if (!obj) return [];
+    // 数组时，返回该数组副本。
+    // TODO：obj.concat() 更方便？
     if (_.isArray(obj)) return slice.call(obj);
+    // 字符串时，特殊处理。
     if (_.isString(obj)) {
       // Keep surrogate pair characters together
+      // match每一个字符到数组中, 通过reStrSymbol保证了:
+      // 1. 不含代理对代码点的所有字符
+      // 2. 合法代理对的所有字符
+      // 3. 代理对代码点的字符
+      // 都能match的数组。
       return obj.match(reStrSymbol);
     }
+    // 类数组时，利用 -.map 重新构造数组。
     if (isArrayLike(obj)) return _.map(obj, _.identity);
+    // 对象是，返回值得数组。
     return _.values(obj);
   };
 
   // Return the number of elements in an object.
+  // 返回集合长度。
   _.size = function(obj) {
     if (obj == null) return 0;
     return isArrayLike(obj) ? obj.length : _.keys(obj).length;
@@ -600,6 +649,8 @@
 
   // Split a collection into two arrays: one whose elements all satisfy the given
   // predicate, and one whose elements all do not satisfy the predicate.
+  // 根据 iteratee 为分组依据，对集合划分成两个数组。
+  // _.partition([0, 1, 2, 3, 4, 5], function(num){ return num % 2 !== 0; }); => [[1, 3, 5], [0, 2, 4]]
   _.partition = group(function(result, value, pass) {
     result[pass ? 0 : 1].push(value);
   }, true);
