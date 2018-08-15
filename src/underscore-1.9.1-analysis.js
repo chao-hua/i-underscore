@@ -444,21 +444,26 @@
   };
 
   // Return the maximum element (or element-based computation).
+  // 获得集合中最大值（仅数值比较，即Number() 非 NaN 结果的值）。
   _.max = function(obj, iteratee, context) {
     var result = -Infinity, lastComputed = -Infinity,
         value, computed;
+    // 无 iteratee 回调操作 或 者回调是数字类型、比较似数组形式对象（数字键值，没有 length 属性的对象）时，直接比较值。
     if (iteratee == null || typeof iteratee == 'number' && typeof obj[0] != 'object' && obj != null) {
       obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
+        // 确保仅比较数值（Number() 非 NaN 结果的值）。
         if (value != null && value > result) {
           result = value;
         }
       }
     } else {
+      // 有 iteratee 参数，则每个元素经过回调操作处理后的值，进行比较。
       iteratee = cb(iteratee, context);
       _.each(obj, function(v, index, list) {
         computed = iteratee(v, index, list);
+        // && 的优先级高于 ||。
         if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
           result = v;
           lastComputed = computed;
@@ -469,6 +474,7 @@
   };
 
   // Return the minimum element (or element-based computation).
+  // 获得集合中最小值（仅数值比较，即Number() 非 NaN 结果的值）。
   _.min = function(obj, iteratee, context) {
     var result = Infinity, lastComputed = Infinity,
         value, computed;
@@ -1209,17 +1215,23 @@
   };
 
   // An internal function for creating assigner functions.
+  // 创建分配器函数（Assigner）, 分配属性到某个对象。
   var createAssigner = function(keysFunc, defaults) {
+    // defaults => undefinedOnly，默认是 false ，表示相同属性会被覆盖；ture：相同属性仅在值为 undefined 时才会覆盖。
     return function(obj) {
       var length = arguments.length;
       if (defaults) obj = Object(obj);
+      // 参数少于两个（0、1），即表示不进行扩展，直接返回。
       if (length < 2 || obj == null) return obj;
+      // 仅遍历第一个参数之外的参数（出去最终合并输出的对象），从中不断取值，赋给 obj。
       for (var index = 1; index < length; index++) {
         var source = arguments[index],
             keys = keysFunc(source),
             l = keys.length;
         for (var i = 0; i < l; i++) {
           var key = keys[i];
+          // defaults：false 默认模式，同属性直接覆盖。
+          // defaults：true ，当同属性的值为 undefined 时，才会覆盖。
           if (!defaults || obj[key] === void 0) obj[key] = source[key];
         }
       }
@@ -1228,10 +1240,12 @@
   };
 
   // Extend a given object with all the properties in passed-in object(s).
+  // 扩展一个对象，它将继承传入的各个对象的属性(包括原型链上非自身的属性)。
   _.extend = createAssigner(_.allKeys);
 
   // Assigns a given object with all the own properties in the passed-in object(s).
   // (https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
+  // 扩展一个对象，只会包含目标对象自身的属性，不包含继承属性。
   _.extendOwn = _.assign = createAssigner(_.keys);
 
   // Returns the first key on an object that passes a predicate test.
@@ -1286,6 +1300,7 @@
   });
 
   // Fill in a given object with default properties.
+  // 使用默认对象 defaultObj 进行填充 obj（只会覆盖未定义的同名属性），例：_.defaults( obj, defaultObj);
   _.defaults = createAssigner(_.allKeys, true);
 
   // Creates an object that inherits from the given prototype object.
@@ -1298,8 +1313,11 @@
   };
 
   // Create a (shallow-cloned) duplicate of an object.
+  // 浅克隆（嵌套的对象或者数组都会跟原对象用同一个引用）。
   _.clone = function(obj) {
+    // 不是对象、数组，直接返回原引用（主要针对基本类型，但是有问题）。
     if (!_.isObject(obj)) return obj;
+    // 数组、对象分别处理。
     return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
   };
 
