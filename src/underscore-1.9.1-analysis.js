@@ -656,26 +656,33 @@
   }, true);
 
   // Array Functions
+  // 数组方法（21个）
   // ---------------
 
   // Get the first element of an array. Passing **n** will return the first N
   // values in the array. Aliased as `head` and `take`. The **guard** check
   // allows it to work with `_.map`.
+  // 返回数组第一个元素，或者返回指定长度的前 n 个元素组成的数组。
   _.first = _.head = _.take = function(array, n, guard) {
+    // 容错。
     if (array == null || array.length < 1) return n == null ? void 0 : [];
+    // 未指定 n，返回数组的第一个元素。
     if (n == null || guard) return array[0];
+    // 指定 n，返回数组的前 n 个元素组成的数组。
     return _.initial(array, array.length - n);
   };
 
   // Returns everything but the last entry of the array. Especially useful on
   // the arguments object. Passing **n** will return all the values in
   // the array, excluding the last N.
+  // 获得 array 的除了最后 n 个元素以外的元素组成的数组，n 默认为 1。
   _.initial = function(array, n, guard) {
     return slice.call(array, 0, Math.max(0, array.length - (n == null || guard ? 1 : n)));
   };
 
   // Get the last element of an array. Passing **n** will return the last N
   // values in the array.
+  // 返回数组最后一个元素，或者返回指定长度的后 n 个元素组成的数组。
   _.last = function(array, n, guard) {
     if (array == null || array.length < 1) return n == null ? void 0 : [];
     if (n == null || guard) return array[array.length - 1];
@@ -685,31 +692,45 @@
   // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
   // Especially useful on the arguments object. Passing an **n** will return
   // the rest N values in the array.
+  // 获得 array 的除了最前 n 个元素以外的元素组成的数组，n 默认为 1。
   _.rest = _.tail = _.drop = function(array, n, guard) {
     return slice.call(array, n == null || guard ? 1 : n);
   };
 
   // Trim out all falsy values from an array.
+  // 返回一个全部为 true（Boolean() 的结果为 true）的数组。
+  // Boolean() 为 false：false、null、undefined、''、NaN、0。
   _.compact = function(array) {
     return _.filter(array, Boolean);
   };
 
   // Internal implementation of a recursive `flatten` function.
   var flatten = function(input, shallow, strict, output) {
+    // shallow：是否浅展开，true：浅展开；false：深度展开，没传就表示深度展开。
+    // strict：严格模式, true：严格，input 只能是数组（类数组）；false：非严格，没传就表示非严格。
     output = output || [];
     var idx = output.length;
     for (var i = 0, length = getLength(input); i < length; i++) {
       var value = input[i];
       if (isArrayLike(value) && (_.isArray(value) || _.isArguments(value))) {
         // Flatten current level of array or arguments object.
+        // 浅展开。
         if (shallow) {
           var j = 0, len = value.length;
           while (j < len) output[idx++] = value[j++];
         } else {
+          // 深度展开，递归。
           flatten(value, shallow, strict, output);
           idx = output.length;
         }
       } else if (!strict) {
+        // 非严格，value 不数组等，也可以返回。
+        // strict 是和 shallow 配合使用的。
+        // shallow = false，strict = true，即深度展开，严格模式，深度展开最终的 value 必定不是数组，又是严格模式，最终只能返回 []。
+        // flatten( [1, [2], [3, [[4]]]], false, false); => [1, 2, 3, 4]：默认情况，深度、非严格展开。
+        // flatten( [1, [2], [3, [[4]]]], false, true); => []：深度、严格，有问题，几乎不用。
+        // flatten( [1, [2], [3, [[4]]]], true, false); => [1, 2, 3, [4]]：浅度、非严格，只展开一层数组。
+        // flatten( [1, [2], [3, [[4]]]], true, true); => [2, 3, [4]]：浅度、严格，常用于浅度合并几个数组，_.union。
         output[idx++] = value;
       }
     }
