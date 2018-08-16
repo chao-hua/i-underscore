@@ -705,6 +705,7 @@
   };
 
   // Internal implementation of a recursive `flatten` function.
+  // 根据条件展平数组（类数组）。
   var flatten = function(input, shallow, strict, output) {
     // shallow：是否浅展开，true：浅展开；false：深度展开，没传就表示深度展开。
     // strict：严格模式, true：严格，input 只能是数组（类数组）；false：非严格，没传就表示非严格。
@@ -738,12 +739,17 @@
   };
 
   // Flatten out an array, either recursively (by default), or just one level.
+  // 展平数组。根据 shallow，深度（默认）、浅度展开。
   _.flatten = function(array, shallow) {
     return flatten(array, shallow, false);
   };
 
   // Return a version of the array that does not contain the specified value(s).
+  // 返回移除指定多个元素后的数组。
+  // _.without([1, 2, 1, 0, 3, 1, 4], 0, 1); => [2, 3, 4]。
   _.without = restArguments(function(array, otherArrays) {
+    // 通过 restArguments 函数，将 rest 参数，已经转化成一个数组，即：_.difference([1, 2, 1, 0, 3, 1, 4], [0, 1])。
+    // 在 1.8.3 版本中，没有 restArguments 函数，代码是： _.difference(array, slice.call(arguments, 1)); 更直观。
     return _.difference(array, otherArrays);
   });
 
@@ -753,27 +759,37 @@
   // is not a one-to-one function, so providing an iteratee will disable
   // the faster algorithm.
   // Aliased as `unique`.
+  // 数组去重。
   _.uniq = _.unique = function(array, isSorted, iteratee, context) {
+    // isSorted：传入的数组是否已排序，已排序会加快效率。
+    // 第二个参数不是 boolean ，即理解为是比较函数, 且默认是没有排序的数组，=> _.unique(array, iteratee, context) isSorted = false。
     if (!_.isBoolean(isSorted)) {
       context = iteratee;
       iteratee = isSorted;
       isSorted = false;
     }
+    // 回调操作/比较操作 优化。
     if (iteratee != null) iteratee = cb(iteratee, context);
     var result = [];
     var seen = [];
     for (var i = 0, length = getLength(array); i < length; i++) {
       var value = array[i],
           computed = iteratee ? iteratee(value, i, array) : value;
+      // 如果是有序数组 且 没有回调操作/比较操作过值，直接用 !== 比较。
       if (isSorted && !iteratee) {
+        // 如果 i === 0，是第一个元素，则直接 push。
+        // 否则比较当前元素是否和前一个元素是否相等，有序数组才可以这样比较。
         if (!i || seen !== computed) result.push(value);
+        // seen 保存当前元素，供下一次对比。
         seen = computed;
       } else if (iteratee) {
+        // 非排序数组，且存在回调操作/比较操作，需要根据 computed 来进行比较，而不是直接使用 value。
         if (!_.contains(seen, computed)) {
           seen.push(computed);
           result.push(value);
         }
       } else if (!_.contains(result, value)) {
+        // 其他情况，直接通过 _.contains 进行判断。
         result.push(value);
       }
     }
@@ -782,22 +798,31 @@
 
   // Produce an array that contains the union: each distinct element from all of
   // the passed-in arrays.
+  // 合并多个数组，即获得多个数组的并集，并去重。
   _.union = restArguments(function(arrays) {
+    // 首先展开数组（浅、严格）：_.union([1, 2, 3], [101, [2, 1], 10], [2,3]) => [1,2,3,101,[2,1],10,2,3]。
+    // 再去重：=> [1,2,3,101,[2,1],10]。
     return _.uniq(flatten(arrays, true, true));
   });
 
   // Produce an array that contains every item shared between all the
   // passed-in arrays.
+  // 获得多个数组的交集。
   _.intersection = function(array) {
     var result = [];
     var argsLength = arguments.length;
+    // 遍历第一个数组，与后面所有数组元素进行对比。
     for (var i = 0, length = getLength(array); i < length; i++) {
       var item = array[i];
+      // 结果数组已经包含了该元素, 跳过此次遍历。
       if (_.contains(result, item)) continue;
       var j;
+      // 遍历的除去第一个数值之外的数组（j 从 1 开始）。
       for (j = 1; j < argsLength; j++) {
+        // 如果在某一个数组中不存在，即不是交集成员，跳出，进行下次循环。
         if (!_.contains(arguments[j], item)) break;
       }
+      // 如果遍历完成，依然没有跳出，说明每个数组中都存在这个元素，加入结果集。
       if (j === argsLength) result.push(item);
     }
     return result;
@@ -805,8 +830,11 @@
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
+  // 获取对象数组与多个数组之间的差集，即第一个数组有，其他多个数组都没有的元素的集合。
   _.difference = restArguments(function(array, rest) {
+    // 先将除了首个数组之外的数组全部展开（浅、严格）。
     rest = flatten(rest, true, true);
+    // 遍历 array, 过滤掉 array 中的存在于 rest 数组中元素。
     return _.filter(array, function(value){
       return !_.contains(rest, value);
     });
