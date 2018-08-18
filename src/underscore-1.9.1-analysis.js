@@ -842,12 +842,18 @@
 
   // Complement of _.zip. Unzip accepts an array of arrays and groups
   // each array's elements on shared indices.
-  // TODO
+  // 将多个成员数组，从对应的位置抽出元素，组成新的分组，合并这些分组成数组。
+  // _.unzip([['moe', 'larry', 'curly', 'hc'], [30, 40, 50], [true, false, false]])
+  // => [["moe", 30, true], ["larry", 40, false], ["curly", 50, false], ['hc', undefined, undefined]]
+  // _.unzip([["moe", 30, true], ["larry", 40, false], ["curly", 50, false]]);
+  // => [['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false]]
   _.unzip = function(array) {
+    // 获得 array 的成员数组中最大的长度。
     var length = array && _.max(array, getLength).length || 0;
     var result = Array(length);
 
     for (var index = 0; index < length; index++) {
+      // 从 array 中获得所有 index 对应元素的数组，放入 result 对应的位置。
       result[index] = _.pluck(array, index);
     }
     return result;
@@ -855,17 +861,32 @@
 
   // Zip together multiple lists into a single array -- elements that share
   // an index go together.
+  // 压缩数组。将多个数组，从对应的位置抽出元素，组成新的分组，合并这些分组成数组。
+  // 与 _.unzip，只是传入参数是多个数组， _.unzip 是单个数组。
+  // 1.8.3 中代码是：_.zip = function(){ return _.unzip(arguments);}
+  // _.zip(['moe', 'larry', 'curly', 'hc'], [30, 40, 50], [true, false, false])
+  // => [["moe", 30, true], ["larry", 40, false], ["curly", 50, false], ['hc', undefined, undefined]]
+  // _.zip(["moe", 30, true], ["larry", 40, false], ["curly", 50, false]);
+  // => [['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false]]
+
   _.zip = restArguments(_.unzip);
 
   // Converts lists into objects. Pass either a single array of `[key, value]`
   // pairs, or two parallel arrays of the same length -- one of keys, and one of
   // the corresponding values. Passing by pairs is the reverse of _.pairs.
+  // 将数组转化成对象。
+  // 参数是两个数组，两个数组对应，组成键值对：
+  // _.object(['moe', 'larry', 'curly'], [30, 40, 50]); => {moe: 30, larry: 40, curly: 50}
+  // 参数是一个数组，只能转换二位数组（数组成员是数组）的形式：
+  // _.object([['moe', 30], ['larry', 40], ['curly', 50]]); => {moe: 30, larry: 40, curly: 50}
   _.object = function(list, values) {
     var result = {};
     for (var i = 0, length = getLength(list); i < length; i++) {
+      // 两个参数数组。
       if (values) {
         result[list[i]] = values[i];
       } else {
+        // 一个参数组数，仅支持二位数组。
         result[list[i][0]] = list[i][1];
       }
     }
