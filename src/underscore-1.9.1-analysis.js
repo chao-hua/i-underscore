@@ -1010,6 +1010,7 @@
   };
 
   // Function (ahem) Functions
+  // 函数扩展方法（15个）
   // ------------------
 
   // Determines whether to execute a function as a constructor
