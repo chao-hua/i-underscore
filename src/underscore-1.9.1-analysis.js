@@ -868,7 +868,6 @@
   // => [["moe", 30, true], ["larry", 40, false], ["curly", 50, false], ['hc', undefined, undefined]]
   // _.zip(["moe", 30, true], ["larry", 40, false], ["curly", 50, false]);
   // => [['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false]]
-
   _.zip = restArguments(_.unzip);
 
   // Converts lists into objects. Pass either a single array of `[key, value]`
@@ -916,10 +915,15 @@
 
   // Use a comparator function to figure out the smallest index at which
   // an object should be inserted so as to maintain order. Uses binary search.
+  // 返回 obj 应当在 array 中的位置。
+  // _.sortedIndex([10, 20, 30, 40, 50], 35); => 3
+  // _.sortedIndex([{name: 'moe', age: 40}, {name: 'curly', age: 60}], {name: 'larry', age: 50}, 'age'); => 1
   _.sortedIndex = function(array, obj, iteratee, context) {
+    // 可以传入不同的类型。
     iteratee = cb(iteratee, context, 1);
     var value = iteratee(obj);
     var low = 0, high = getLength(array);
+    // 二分查找。
     while (low < high) {
       var mid = Math.floor((low + high) / 2);
       if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
@@ -966,15 +970,21 @@
   // Generate an integer Array containing an arithmetic progression. A port of
   // the native Python `range()` function. See
   // [the Python documentation](http://docs.python.org/library/functions.html#range).
+  // 根据起始位置、终止位置、步长，生成数组序列 [start, stop)。
+  // _.range(1, 5, 3); => [1, 4]
+  // _.range(5); => [0, 1, 2, 3, 4]
+  // _.range(-5); => [0, -1, -2, -3, -4]
   _.range = function(start, stop, step) {
+    // 校正终止位置，若无 stop（只有一个参数）时，start = 0，stop 是参数值。
     if (stop == null) {
       stop = start || 0;
       start = 0;
     }
+    // 校正步长，若无 step 参数，根据 start<stop 来判定行进方向，正向 1，负向 -1。
     if (!step) {
       step = stop < start ? -1 : 1;
     }
-
+    // 计算最终数组的长度，ceil() 是向上取整。
     var length = Math.max(Math.ceil((stop - start) / step), 0);
     var range = Array(length);
 
@@ -987,6 +997,8 @@
 
   // Chunk a single array into multiple arrays, each containing `count` or fewer
   // items.
+  // 将数组分成若干份，每份 count 个元素（剩余不足 count 个放入一个数组），再组成一个数组。若没传参数 count 返回空数组。
+  // _.chunk([1,2,3,4,5,6,7], 2); => [[1,2], [3,4], [5,6], [7]]
   _.chunk = function(array, count) {
     if (count == null || count < 1) return [];
     var result = [];
