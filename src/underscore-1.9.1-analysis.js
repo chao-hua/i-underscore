@@ -1015,6 +1015,7 @@
 
   // Determines whether to execute a function as a constructor
   // or a normal function with the provided arguments.
+  // TODO
   var executeBound = function(sourceFunc, boundFunc, context, callingContext, args) {
     if (!(callingContext instanceof boundFunc)) return sourceFunc.apply(context, args);
     var self = baseCreate(sourceFunc.prototype);
