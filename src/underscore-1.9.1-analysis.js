@@ -196,7 +196,7 @@
     if (nativeCreate) return nativeCreate(prototype);
     // 不存在，就简易实现 create 内部逻辑（不支持属性列表）。
     Ctor.prototype = prototype;
-    // TODO：new Ctor 之后不加括号，看似无区别（不确定），但这里这样用优势是什么？
+    // new 命令本身就可以执行构造函数，构造函数带不带括号一样，但更推荐加上括号。
     var result = new Ctor;
     // 还原Ctor原型，防止内存泄漏。
     Ctor.prototype = null;
@@ -1015,19 +1015,28 @@
 
   // Determines whether to execute a function as a constructor
   // or a normal function with the provided arguments.
+  // 执行绑定后的函数。根据调用的方式不同进行区分：普通函数执行；当构造函数执行（new 掉用）。
   var executeBound = function(sourceFunc, boundFunc, context, callingContext, args) {
+    // 非 new 调用，直接调用 apply。
     if (!(callingContext instanceof boundFunc)) return sourceFunc.apply(context, args);
+    // new 调用，context => self。
     var self = baseCreate(sourceFunc.prototype);
     var result = sourceFunc.apply(self, args);
+    // 如果构造函数返回了对象，则返回该对象。
     if (_.isObject(result)) return result;
+    // 否则返回 self。
     return self;
   };
 
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
   // available.
+  // 定义型绑定（区别于调用型绑定：apply、call），将 func 中的 this 指向 context 对象。
+  // ES5 Function.prototype.bind 方法的扩展（polyfill)。
   _.bind = restArguments(function(func, context, args) {
+    // 如果 func 不是函数，抛出错误。
     if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
+    // 返回执行函数，这种方式写主要是为了能够传递 rest 参数。
     var bound = restArguments(function(callArgs) {
       return executeBound(func, bound, context, this, args.concat(callArgs));
     });
@@ -1057,12 +1066,16 @@
   // Bind a number of an object's methods to that object. Remaining arguments
   // are the method names to be bound. Useful for ensuring that all callbacks
   // defined on an object belong to it.
+  // 将一系列方法（以名字的形式传递）中的 this 指向 obj 对象。
   _.bindAll = restArguments(function(obj, keys) {
+    // 深度、非严格展开 keys 参数。
     keys = flatten(keys, false, false);
     var index = keys.length;
+    // 值有一个参数，即 keys = []，没有传入任何 functionName，报错。
     if (index < 1) throw new Error('bindAll must be passed function names');
     while (index--) {
       var key = keys[index];
+      // 逐个绑定。
       obj[key] = _.bind(obj[key], obj);
     }
   });
