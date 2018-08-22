@@ -1047,20 +1047,29 @@
   // arguments pre-filled, without changing its dynamic `this` context. _ acts
   // as a placeholder by default, allowing any combination of arguments to be
   // pre-filled. Set `_.partial.placeholder` for a custom placeholder argument.
+  // 通过该函数，将原本函数中的部分参数确定下来，返回新函数，只需传入缺少的参数。
+  // 称为偏函数。
+  // 还提供了占位符机制，更灵活的处理那些已经确定的参数位置。
   _.partial = restArguments(function(func, boundArgs) {
+    // 占位符。
     var placeholder = _.partial.placeholder;
     var bound = function() {
+      // position 用来标识当前已赋值的 arguments 个数。
       var position = 0, length = boundArgs.length;
       var args = Array(length);
       for (var i = 0; i < length; i++) {
+        // 如果有占位符，argus 赋值 bound 的 arguments 对应占位符位置的参数, 之后刷新位置（position++）, 
+        // 否则赋值绑定时对应位置的参数（boundArgs）。
         args[i] = boundArgs[i] === placeholder ? arguments[position++] : boundArgs[i];
       }
+      // 如果 bound 函数还有剩余参数，合并剩余的参数。
       while (position < arguments.length) args.push(arguments[position++]);
       return executeBound(func, bound, this, this, args);
     };
     return bound;
   });
 
+  // 默认被理解的占位符为 _ , 允许自定义。
   _.partial.placeholder = _;
 
   // Bind a number of an object's methods to that object. Remaining arguments
