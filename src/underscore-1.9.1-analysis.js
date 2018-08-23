@@ -1050,6 +1050,9 @@
   // 通过该函数，将原本函数中的部分参数确定下来，返回新函数，只需传入缺少的参数。
   // 称为偏函数。
   // 还提供了占位符机制，更灵活的处理那些已经确定的参数位置。
+  // var subtract = function(a, b) { return b - a; };
+  // sub5 = _.partial(subtract, 5); sub5(20); => 15
+  // subFrom20 = _.partial(subtract, _, 20); subFrom20(5); =>15
   _.partial = restArguments(function(func, boundArgs) {
     // 占位符。
     var placeholder = _.partial.placeholder;
@@ -1090,13 +1093,22 @@
   });
 
   // Memoize an expensive function by storing its results.
+  // 将函数（通常是递归函数）进行处理，返回带缓存的记忆函数，存储中间运算结果，提高效率。
+  // var fibonacci = _.memoize(function(n) { return n < 2 ? n: fibonacci(n - 1) + fibonacci(n - 2); });
+  // fibonacci(5);
   _.memoize = function(func, hasher) {
+    // hasher：自定义如何获得缓存的位置。
     var memoize = function(key) {
+      // 获取缓存。
       var cache = memoize.cache;
+      // 获得缓存地址，可以根据 hasher 来配置缓存的 key ,若没有配置，默认就是 key。
       var address = '' + (hasher ? hasher.apply(this, arguments) : key);
+      // 如果没有该 address 对应的缓存，则调用函数进行计算。
       if (!has(cache, address)) cache[address] = func.apply(this, arguments);
+      // 否则直接返回缓存。
       return cache[address];
     };
+    // 初始化调用 _.memoize 缓存对象，不是清除 memoize 中的缓存。
     memoize.cache = {};
     return memoize;
   };
