@@ -1115,14 +1115,19 @@
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
+  // 延迟执行函数（仅仅是对 setTimeout 进行了一次封装）。
   _.delay = restArguments(function(func, wait, args) {
     return setTimeout(function() {
+      // 绑定到 null（apply、call，传递的第一个参数是 null、undefined，那么 this 就会被绑定到全局对象上）。
+      // 因此需要需要自己处理正确的上下文（即将 this 赋值，然后再引用）。
       return func.apply(null, args);
     }, wait);
   });
 
   // Defers a function, scheduling it to run after the current call stack has
   // cleared.
+  // 将 func 异步化（放入异步队列-setTimeout）。
+  // 借助 _.partial，在延迟函数 _.delay 中确定延迟的时间 1ms，目的并非延迟时间，而是放入异步队列。
   _.defer = _.partial(_.delay, _, 1);
 
   // Returns a function, that, when invoked, will only be triggered at most once
@@ -1131,37 +1136,65 @@
   // but if you'd like to disable the execution on the leading edge, pass
   // `{leading: false}`. To disable execution on the trailing edge, ditto.
   _.throttle = function(func, wait, options) {
+    // timeout：最近一次被追踪的调用（定时器的标识）。
+    // context：缓存 func 执行时需要的上下文。
+    // args：缓存 func 执行时需要的参数。
+    // result：缓存 func 执行的结果。
     var timeout, context, args, result;
+    // previous：最近一次func被调用的时间戳。
     var previous = 0;
+    // 参数默认值。TODO。
+    // leading：是否设置节流前缘（leading edge），
+    // 前缘的作用是保证第一次尝试调用的 func 会被立即执行，否则第一次调用也必须等待 wait 时间，默认为 true。
+    // trailing：是否设置节流后缘（trailing edge）,
+    // 后缘的作用是：当最近一次尝试调用 func 时，如果 func 不能立即执行，会延后 func 的执行，默认为 true。
     if (!options) options = {};
 
+    // 创建一个延后执行的函数包裹住 func 的执行过程。
     var later = function() {
+      // 执行时，刷新最近一次调用的时间戳。
+      // 如果 options.leading === false：则每次触发回调后将 previous 置为 0，否则为当前时间戳。
       previous = options.leading === false ? 0 : _.now();
+      // 清空为此次执行设置的定时器。
       timeout = null;
       result = func.apply(context, args);
       if (!timeout) context = args = null;
     };
 
     var throttled = function() {
+      // 我们尝试调用func时，会首先记录当前时间戳。
       var now = _.now();
+      // 是否是第一次执行。
       if (!previous && options.leading === false) previous = now;
+      // func 还要等待多久才能被调用 = 预设的最小等待期-（当前时间-上一次调用的时间）。
       var remaining = wait - (now - previous);
+      // 记录执行时需要的上下文和参数。
       context = this;
       args = arguments;
+      // 如果计算后能被立即执行。
+      // remaining <= 0：不需要等待 => 立即执行。
+      // remaining > wait：即 now < previous，TODO。
       if (remaining <= 0 || remaining > wait) {
+        // 清除之前的设置的延时执行，就不存在某些回调一同发生的情况了。
         if (timeout) {
           clearTimeout(timeout);
           timeout = null;
         }
+        // 刷新最近一次func调用的时间点。
         previous = now;
+        // 执行func调用。
         result = func.apply(context, args);
+        // 再次检查 timeout，因为 func 执行期间可能有新的 timeout 被设置，
+        // 如果 timeout 被清空了，代表不再有等待执行的 func，也清空 context 和 args。
         if (!timeout) context = args = null;
       } else if (!timeout && options.trailing !== false) {
+        // 如果设置了trailing ，那么暂缓此次调用尝试的执行。
         timeout = setTimeout(later, remaining);
       }
       return result;
     };
 
+    // 取消函数执行控制。
     throttled.cancel = function() {
       clearTimeout(timeout);
       previous = 0;
