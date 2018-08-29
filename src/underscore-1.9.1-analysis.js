@@ -1135,6 +1135,9 @@
   // as much as it can, without ever going more than once per `wait` duration;
   // but if you'd like to disable the execution on the leading edge, pass
   // `{leading: false}`. To disable execution on the trailing edge, ditto.
+  // 节流函数。
+  // 节流的目的是：降低触发回调的频率，减少不必要的过多的调用。
+  // 常应用于：DOM 元素的拖拽功能实现（mousemove）；搜索联想（keyup）；页面底部自动加载更多。
   _.throttle = function(func, wait, options) {
     // timeout：最近一次被追踪的调用（定时器的标识）。
     // context：缓存 func 执行时需要的上下文。
@@ -1166,7 +1169,7 @@
       var now = _.now();
       // 是否是第一次执行。
       if (!previous && options.leading === false) previous = now;
-      // func 还要等待多久才能被调用 = 预设的最小等待期-（当前时间-上一次调用的时间）。
+      // func 还要等待多久才能被调用 = 预设的最小等待期 -（当前时间 - 上一次调用的时间）。
       var remaining = wait - (now - previous);
       // 记录执行时需要的上下文和参数。
       context = this;
@@ -1180,7 +1183,7 @@
           clearTimeout(timeout);
           timeout = null;
         }
-        // 刷新最近一次func调用的时间点。
+        // 刷新最近一次func调用的时间戳。
         previous = now;
         // 执行func调用。
         result = func.apply(context, args);
@@ -1188,7 +1191,7 @@
         // 如果 timeout 被清空了，代表不再有等待执行的 func，也清空 context 和 args。
         if (!timeout) context = args = null;
       } else if (!timeout && options.trailing !== false) {
-        // 如果设置了trailing ，那么暂缓此次调用尝试的执行。
+        // 如果设置了 trailing ，那么暂缓此次调用尝试的执行。
         timeout = setTimeout(later, remaining);
       }
       return result;
@@ -1208,28 +1211,40 @@
   // be triggered. The function will be called after it stops being called for
   // N milliseconds. If `immediate` is passed, trigger the function on the
   // leading edge, instead of the trailing.
-  // TODO
+  // 防抖函数。
+  // 防抖的目的是：高频（由 wait 来确定）操作下只响应一次。
+  // 常应用于：resize、scroll、mousedown、mousemove等；文本输入的验证（keyup、keydown）。
+  // immediate：false（默认），可以执行时也必须延后至少 wait 个时间才能执行。
+  // immediate：true，可以执行时立即执行。
   _.debounce = function(func, wait, immediate) {
     var timeout, result;
 
     var later = function(context, args) {
+      // 执行时，清空定时器标志，意味着回到初始状态。
       timeout = null;
       if (args) result = func.apply(context, args);
     };
 
     var debounced = restArguments(function(args) {
+      // 每次新的尝试调用 func，会使抛弃之前等待的 func。
       if (timeout) clearTimeout(timeout);
+      // 如果允许新的调用立即执行。
       if (immediate) {
+        // 如果有定时器，说明执行还在等候时间内，不再执行，否则立即执行。
         var callNow = !timeout;
+        // 刷新 timeout。
         timeout = setTimeout(later, wait);
+        // 如果满足立即执行，立即执行。
         if (callNow) result = func.apply(this, args);
       } else {
+        // 延迟执行。
         timeout = _.delay(later, wait, this, args);
       }
 
       return result;
     });
 
+    // 取消防抖（主要用于在等候时间内，想回到初始状态，立即执行），变成初始状态。
     debounced.cancel = function() {
       clearTimeout(timeout);
       timeout = null;
