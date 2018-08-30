@@ -1331,6 +1331,7 @@
   // 回调函数只执行一次，之后结果不再改变。
   _.once = _.partial(_.before, 2);
 
+  // rest 参数函数。
   _.restArguments = restArguments;
 
   // Object Functions
