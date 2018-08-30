@@ -1261,7 +1261,17 @@
   // Returns the first function passed as an argument to the second,
   // allowing you to adjust arguments, run code before and after, and
   // conditionally execute the original function.
+  // 使用 wrapper 对 func 进行包裹，使 func 的执行前后能融入更多业务逻辑。
+  // var logger = function(func) {
+  //   console.log('before');
+  //   func();
+  //   console.log('afert');
+  // };
+  // var request = function() { console.log('requesting'); };
+  // var loggedRequest = _.wrap(request, logger);
+  // loggedRequest(); => before requesting afert
   _.wrap = function(func, wrapper) {
+    // 借助于偏函数将，这里注意的是：wrapper 作为主函数，而 func 作为已经确定的参数。
     return _.partial(wrapper, func);
   };
 
@@ -1275,18 +1285,24 @@
 
   // Returns a function that is the composition of a list of functions, each
   // consuming the return value of the function that follows.
+  // 组合各个函数为一新函数。
+  // 执行组合时，将函数倒序执行，将结果作为下一个函数执行的参数。
+  // _.compose( f1, f2, f3) => f3->f2->f1
   _.compose = function() {
     var args = arguments;
     var start = args.length - 1;
     return function() {
       var i = start;
+      // 上一个执行函数的结果，作为下一个执行函数的参数。
       var result = args[start].apply(this, arguments);
+      // 倒序执行。
       while (i--) result = args[i].call(this, result);
       return result;
     };
   };
 
   // Returns a function that will only be executed on and after the Nth call.
+  // 创建一个函数，改函数运行 times 次后，才执行回调函数 func。
   _.after = function(times, func) {
     return function() {
       if (--times < 1) {
@@ -1296,12 +1312,15 @@
   };
 
   // Returns a function that will only be executed up to (but not including) the Nth call.
+  // 创建一个函数，该函数开始每次都会执行回调函数 func（执行了 times - 1 次）,直到第 times 次后，执行结果不在改变。
   _.before = function(times, func) {
+    // 暂存最近一次回调函数 func 的结果。
     var memo;
     return function() {
       if (--times > 0) {
         memo = func.apply(this, arguments);
       }
+      // 清除函数引用。
       if (times <= 1) func = null;
       return memo;
     };
@@ -1309,6 +1328,7 @@
 
   // Returns a function that will be executed at most one time, no matter how
   // often you call it. Useful for lazy initialization.
+  // 回调函数只执行一次，之后结果不再改变。
   _.once = _.partial(_.before, 2);
 
   _.restArguments = restArguments;
