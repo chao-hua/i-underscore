@@ -1335,6 +1335,7 @@
   _.restArguments = restArguments;
 
   // Object Functions
+  // 对象扩展方法（40个）
   // ----------------
 
   // Keys in IE < 9 that won't be iterated by `for key in ...` and thus missed.
