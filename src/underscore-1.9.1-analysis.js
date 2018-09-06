@@ -1790,6 +1790,7 @@
       }
       obj = obj[key];
     }
+    // 如果 path 是空数组，返回 false。
     return !!length;
   };
 
