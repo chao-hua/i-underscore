@@ -1775,10 +1775,13 @@
 
   // Shortcut function for checking if an object has a given property directly
   // on itself (in other words, not on a prototype).
+  // 判断对象中是否有指定 path 属性（自身属性，不含继承属性），path 可以是数组，深度判断属性。
   _.has = function(obj, path) {
+    // 如果 path 参数不是数组，直接验证该参数是不是自身属性。
     if (!_.isArray(path)) {
       return has(obj, path);
     }
+    // 如果 path 参数是数组，深度判断。
     var length = path.length;
     for (var i = 0; i < length; i++) {
       var key = path[i];
