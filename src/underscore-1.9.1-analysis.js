@@ -1413,6 +1413,7 @@
 
   // Returns the results of applying the iteratee to each element of the object.
   // In contrast to _.map it returns an object.
+  // TODO
   _.mapObject = function(obj, iteratee, context) {
     iteratee = cb(iteratee, context);
     var keys = _.keys(obj),
