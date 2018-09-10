@@ -1413,7 +1413,6 @@
 
   // Returns the results of applying the iteratee to each element of the object.
   // In contrast to _.map it returns an object.
-  // TODO
   _.mapObject = function(obj, iteratee, context) {
     iteratee = cb(iteratee, context);
     var keys = _.keys(obj),
@@ -1439,6 +1438,7 @@
   };
 
   // Invert the keys and values of an object. The values must be serializable.
+  // 调换 obj 对象的属性与值。
   _.invert = function(obj) {
     var result = {};
     var keys = _.keys(obj);
@@ -1506,39 +1506,54 @@
   };
 
   // Internal pick helper function to determine if `obj` has key `key`.
+  // 判断某个 key 是否存在 obj 中。
   var keyInObj = function(value, key, obj) {
     return key in obj;
   };
 
   // Return a copy of the object only containing the whitelisted properties.
+  // 根据白名单返回 obj 的拷贝值，白名单参数是单个的属性或者操作函数。
   _.pick = restArguments(function(obj, keys) {
     var result = {}, iteratee = keys[0];
+    // 容错。
     if (obj == null) return result;
+    // 无论白名单参数是什么，最终都是通过一个 iteratee 函数来确定是否返回属性。
+    // 如果白名单参数（第二个参数）是函数。
     if (_.isFunction(iteratee)) {
       if (keys.length > 1) iteratee = optimizeCb(iteratee, keys[1]);
+      // 获得对象所有的 key。
       keys = _.allKeys(obj);
     } else {
+      // 如果白名单参数是一系列的 key，则根据这些 key 来进行筛选。
+      // 但是首先要确保对象有这个属性。
       iteratee = keyInObj;
+      // 将 keys 展平。
       keys = flatten(keys, false, false);
+      // 对象化 obj ，容错。
       obj = Object(obj);
     }
     for (var i = 0, length = keys.length; i < length; i++) {
       var key = keys[i];
       var value = obj[key];
+      // 最终的判定函数。
       if (iteratee(value, key, obj)) result[key] = value;
     }
     return result;
   });
 
   // Return a copy of the object without the blacklisted properties.
+  // 根据黑名单返回 obj 的拷贝值，黑名单参数是单个的属性或者操作函数。
+  // 与 _.pick 相反。
   _.omit = restArguments(function(obj, keys) {
     var iteratee = keys[0], context;
     if (_.isFunction(iteratee)) {
+      // 返回 iteratee 结果的补集。
       iteratee = _.negate(iteratee);
       if (keys.length > 1) context = keys[1];
     } else {
       keys = _.map(flatten(keys, false, false), String);
       iteratee = function(value, key) {
+        // 返回 keys 的补集。
         return !_.contains(keys, key);
       };
     }
@@ -1591,21 +1606,29 @@
 
   // Internal recursive comparison function for `isEqual`.
   var eq, deepEq;
+  // 比较函数。
   eq = function(a, b, aStack, bStack) {
     // Identical objects are equal. `0 === -0`, but they aren't identical.
     // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+    // 即使 a === b，也要进一步判断 是否是 +-0，它们不是完全相等的。
+    // 在原生 js 中，0 === -0, 但是 1/0 是 Infinity，而 1/-0 是 -Infinity，因此他们其实是不完全相等的。
     if (a === b) return a !== 0 || 1 / a === 1 / b;
     // `null` or `undefined` only equal to itself (strict comparison).
+    // 保证 null 与 undefined 仅与自身相等。
     if (a == null || b == null) return false;
     // `NaN`s are equivalent, but non-reflexive.
+    // 修正原生 js 中 NaN 不等于自身的问题，但是他们理应是相等的。
     if (a !== a) return b !== b;
     // Exhaust primitive checks
     var type = typeof a;
+    // TODO 如果 a、b 都是立即数，a!==b 就意味着他们真的不等。
     if (type !== 'function' && type !== 'object' && typeof b != 'object') return false;
+    // 其他情况（对象、数组、函数等）需要进行深度比较。
     return deepEq(a, b, aStack, bStack);
   };
 
   // Internal recursive comparison function for `isEqual`.
+  // 承接 eq，深度比较函数。
   deepEq = function(a, b, aStack, bStack) {
     // Unwrap any wrapped objects.
     if (a instanceof _) a = a._wrapped;
@@ -1696,6 +1719,7 @@
   };
 
   // Perform a deep comparison to check if two objects are equal.
+  // 深度比较 a、b 是否相等。
   _.isEqual = function(a, b) {
     return eq(a, b);
   };
