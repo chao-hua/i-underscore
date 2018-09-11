@@ -1851,6 +1851,7 @@
   };
 
   // Utility Functions
+  // 工具方法（16个）
   // -----------------
 
   // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
@@ -1870,6 +1871,7 @@
   // Predicate-generating functions. Often useful outside of Underscore.
   // 返回一个函数，返回的函数都够返回 value 自身。
   // 可以用于返回一些固定值得情况，使语义更明确。
+  // var a = 2; var getConstA = _.constant(a); a = 3; getConstA(); // => 2
   _.constant = function(value) {
     return function() {
       return value;
@@ -1917,6 +1919,7 @@
   };
 
   // Run a function **n** times.
+  // 执行 iteratee 操作 n 次，并返回保存有每次执行结果的数组。
   _.times = function(n, iteratee, context) {
     var accum = Array(Math.max(0, n));
     iteratee = optimizeCb(iteratee, context, 1);
@@ -1971,6 +1974,10 @@
   // Traverses the children of `obj` along `path`. If a child is a function, it
   // is invoked with its parent as context. Returns the value of the final
   // child, or `fallback` if any child is undefined.
+  // 根据 path 来处理 obj。
+  // path 是 obj 的成员方法：调用该方法。
+  // path 是 obj 的成员属性（可以是数组，深度取值）：获取该属性的值。
+  // path 是 obj 的未定义属性：可以传递一个 fallback 进一步处理。
   _.result = function(obj, path, fallback) {
     if (!_.isArray(path)) path = [path];
     var length = path.length;
@@ -1990,6 +1997,11 @@
 
   // Generate a unique integer id (unique within the entire client session).
   // Useful for temporary DOM ids.
+  // id 生成器，根据传入的前缀 prefix 生成唯一的 id。
+  // 一旦使用 idCounter 会一直累加，与前缀无关。
+  // _.uniqueId('hc'); => 'hc1'
+  // _.uniqueId('hc'); => 'hc2'
+  // _.uniqueId('xx'); => 'xx3'
   var idCounter = 0;
   _.uniqueId = function(prefix) {
     var id = ++idCounter + '';
