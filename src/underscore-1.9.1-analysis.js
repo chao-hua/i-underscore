@@ -1413,6 +1413,7 @@
 
   // Returns the results of applying the iteratee to each element of the object.
   // In contrast to _.map it returns an object.
+  // 对象的 map 方法，根据回调操作，迭代 obj 的 values，返回新的对象副本。
   _.mapObject = function(obj, iteratee, context) {
     iteratee = cb(iteratee, context);
     var keys = _.keys(obj),
@@ -1427,6 +1428,8 @@
 
   // Convert an object into a list of `[key, value]` pairs.
   // The opposite of _.object.
+  // 将对象转换成元素为 [key, value] 的数组。
+  // _.pairs({a:1,b:2,c:3}) => [["a", 1],["b", 2],["c", 3]]
   _.pairs = function(obj) {
     var keys = _.keys(obj);
     var length = keys.length;
@@ -1567,6 +1570,7 @@
   // Creates an object that inherits from the given prototype object.
   // If additional properties are provided then they will be added to the
   // created object.
+  // 创建一个对象，该对象继承自指定的原型 prototype。
   _.create = function(prototype, props) {
     var result = baseCreate(prototype);
     if (props) _.extendOwn(result, props);
@@ -1585,6 +1589,10 @@
   // Invokes interceptor with the obj, and then returns obj.
   // The primary purpose of this method is to "tap into" a method chain, in
   // order to perform operations on intermediate results within the chain.
+  // 主要用于链式调用，在链式调用中对中间值进行处理。
+  // _.chain([1,2,3,200]).filter(function(num) { return num % 2 == 0; })
+  // .tap(console.log).map(function(num) { return num * num }).value();
+  // => [2, 200] => [4, 40000]
   _.tap = function(obj, interceptor) {
     interceptor(obj);
     return obj;
@@ -1634,6 +1642,7 @@
     if (a instanceof _) a = a._wrapped;
     if (b instanceof _) b = b._wrapped;
     // Compare `[[Class]]` names.
+    // 判断 class 名称。
     var className = toString.call(a);
     if (className !== toString.call(b)) return false;
     switch (className) {
@@ -1659,13 +1668,15 @@
       case '[object Symbol]':
         return SymbolProto.valueOf.call(a) === SymbolProto.valueOf.call(b);
     }
-
+    // 判断是否是数组。
     var areArrays = className === '[object Array]';
+    // 非数组。
     if (!areArrays) {
       if (typeof a != 'object' || typeof b != 'object') return false;
 
       // Objects with different constructors are not equivalent, but `Object`s or `Array`s
       // from different frames are.
+      // 构造函数不同，不相等。
       var aCtor = a.constructor, bCtor = b.constructor;
       if (aCtor !== bCtor && !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
                                _.isFunction(bCtor) && bCtor instanceof bCtor)
@@ -1678,6 +1689,7 @@
 
     // Initializing stack of traversed objects.
     // It's done here since we only need them for objects and arrays comparison.
+    // 记录了上级（父级）的引用，当子元素指向父元素时（循环引用），可以通过引用比较跳出无限递归。
     aStack = aStack || [];
     bStack = bStack || [];
     var length = aStack.length;
@@ -1692,15 +1704,18 @@
     bStack.push(b);
 
     // Recursively compare objects and arrays.
+    // 数组。
     if (areArrays) {
       // Compare array lengths to determine if a deep comparison is necessary.
       length = a.length;
       if (length !== b.length) return false;
       // Deep compare the contents, ignoring non-numeric properties.
+      // 递归深度比较。
       while (length--) {
         if (!eq(a[length], b[length], aStack, bStack)) return false;
       }
     } else {
+      // 深度比较对象。
       // Deep compare objects.
       var keys = _.keys(a), key;
       length = keys.length;
@@ -1708,6 +1723,7 @@
       if (_.keys(b).length !== length) return false;
       while (length--) {
         // Deep compare each member
+        // 递归深度比较。
         key = keys[length];
         if (!(has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
       }
@@ -1726,6 +1742,7 @@
 
   // Is a given array, string, or object empty?
   // An "empty" object has no enumerable own-properties.
+  // 判断 obj 是否是空的，空对象、空数组（类数组）、空字符串、null、undefined 丢视为空的。
   _.isEmpty = function(obj) {
     if (obj == null) return true;
     if (isArrayLike(obj) && (_.isArray(obj) || _.isString(obj) || _.isArguments(obj))) return obj.length === 0;
@@ -1733,23 +1750,29 @@
   };
 
   // Is a given value a DOM element?
+  // 判断 obj 是否是 DOM 对象。
   _.isElement = function(obj) {
+    // 根据 nodeType 类型判断。
     return !!(obj && obj.nodeType === 1);
   };
 
   // Is a given value an array?
   // Delegates to ECMA5's native Array.isArray
+  // 数组判断。优先使用 ES5 中的 Array.isArray 进行判断。
   _.isArray = nativeIsArray || function(obj) {
     return toString.call(obj) === '[object Array]';
   };
 
   // Is a given variable an object?
+  // 判断是否是对象。
+  // underscore 中认为方法时对象，null 不是对象。
   _.isObject = function(obj) {
     var type = typeof obj;
     return type === 'function' || type === 'object' && !!obj;
   };
 
   // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp, isError, isMap, isWeakMap, isSet, isWeakSet.
+  // 类型判断。通过 Object.prototype.toString 来判断。
   _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error', 'Symbol', 'Map', 'WeakMap', 'Set', 'WeakSet'], function(name) {
     _['is' + name] = function(obj) {
       return toString.call(obj) === '[object ' + name + ']';
@@ -1758,14 +1781,17 @@
 
   // Define a fallback version of the method in browsers (ahem, IE < 9), where
   // there isn't any inspectable "Arguments" type.
+  // _.isArguments 方法的 hack，IE < 9 时，arguments 是 [object Object]。
   if (!_.isArguments(arguments)) {
     _.isArguments = function(obj) {
+      // 根据 arguments 必有 callee 属性来判断。
       return has(obj, 'callee');
     };
   }
 
   // Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
   // IE 11 (#1621), Safari 8 (#1929), and PhantomJS (#2236).
+  // _.isFunction 方法的 hack，修正 V8 引擎的问题。
   var nodelist = root.document && root.document.childNodes;
   if (typeof /./ != 'function' && typeof Int8Array != 'object' && typeof nodelist != 'function') {
     _.isFunction = function(obj) {
@@ -1774,26 +1800,31 @@
   }
 
   // Is a given object a finite number?
+  // 判断是否有限。
   _.isFinite = function(obj) {
     return !_.isSymbol(obj) && isFinite(obj) && !isNaN(parseFloat(obj));
   };
 
   // Is the given value `NaN`?
+  // 判断是否非数。比原生 isNaN 先判断是否是数值，不进行非数的判断，原生会将参数先转换成数值。
   _.isNaN = function(obj) {
     return _.isNumber(obj) && isNaN(obj);
   };
 
   // Is a given value a boolean?
+  // 判断是否是布尔类型。
   _.isBoolean = function(obj) {
     return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
   };
 
   // Is a given value equal to null?
+  // 判断是否是 null。
   _.isNull = function(obj) {
     return obj === null;
   };
 
   // Is a given variable undefined?
+  // 判断是否是 undefined。
   _.isUndefined = function(obj) {
     return obj === void 0;
   };
