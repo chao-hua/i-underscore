@@ -1944,6 +1944,7 @@
   };
 
   // List of HTML entities for escaping.
+  // 转义字符表。
   var escapeMap = {
     '&': '&amp;',
     '<': '&lt;',
@@ -1952,6 +1953,7 @@
     "'": '&#x27;',
     '`': '&#x60;'
   };
+  // 反转义字符表。
   var unescapeMap = _.invert(escapeMap);
 
   // Functions for escaping and unescaping strings to/from HTML interpolation.
