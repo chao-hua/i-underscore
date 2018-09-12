@@ -15,7 +15,7 @@ Analyse underscore.js(1.9.1) and rewrite it.
 - [underscore-1.9.1.js 源码中文注释](https://github.com/chao-hua/i-underscore/blob/master/src/underscore-1.9.1-analysis.js)
 - [i-underscore.js](https://github.com/chao-hua/i-underscore/blob/master/src/i-underscore.js)
 
-## 参考
+## Reference
 
 - [yoyoyohamapi/underscore](https://github.com/yoyoyohamapi/underscore)
 - [yoyoyohamapi underscore 分析文档](https://yoyoyohamapi.gitbooks.io/undersercore-analysis)
