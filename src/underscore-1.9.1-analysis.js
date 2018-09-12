@@ -2136,6 +2136,7 @@
   };
 
   // OOP
+  // 面向对象编程
   // ---------------
   // If Underscore is called as a function, it returns a wrapped object that
   // can be used OO-style. This wrapper holds altered versions of all the
@@ -2172,17 +2173,20 @@
   _.mixin(_);
 
   // Add all mutator Array functions to the wrapper.
+  // 将 Array 原型上的部分方法添加到 underscore 中，并支持链式调用。
   _.each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
       var obj = this._wrapped;
       method.apply(obj, arguments);
       if ((name === 'shift' || name === 'splice') && obj.length === 0) delete obj[0];
+      // 支持链式调用。
       return chainResult(this, obj);
     };
   });
 
   // Add all accessor Array functions to the wrapper.
+  // 添加 concat、join、slice 等数组原生方法到 underscore 中。
   _.each(['concat', 'join', 'slice'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
@@ -2213,6 +2217,7 @@
   // popular enough to be bundled in a third party lib, but not be part of
   // an AMD load request. Those cases could generate an error when an
   // anonymous define() is called outside of a loader request.
+  // 兼容 AMD 规范。
   if (typeof define == 'function' && define.amd) {
     define('underscore', [], function() {
       return _;
