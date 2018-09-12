@@ -1945,11 +1945,15 @@
 
   // List of HTML entities for escaping.
   // 转义字符表。
+  // 范围是避免遭受 XSS 攻击所涉及的一些字符。
   var escapeMap = {
+    // 使用实体名称。
+    // 参考对照表：http://www.w3school.com.cn/tags/html_ref_entities.html
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
+    // ' 与 ` 使用实体编号（实体数字），有更好的兼容性，部分浏览器对它们的实体名称不支持。
     "'": '&#x27;',
     '`': '&#x60;'
   };
@@ -1958,19 +1962,26 @@
 
   // Functions for escaping and unescaping strings to/from HTML interpolation.
   var createEscaper = function(map) {
+    // 替换字符的处理函数。
     var escaper = function(match) {
       return map[match];
     };
     // Regexes for identifying a key that needs to be escaped.
+    // source = (?:&|<|>|"|'|`)
+    // 使用非捕获分组 ?: 是应为性能更好，不适用也可以。
     var source = '(?:' + _.keys(map).join('|') + ')';
+    // 判断正则。
     var testRegexp = RegExp(source);
+    // 替换定位正则。
     var replaceRegexp = RegExp(source, 'g');
     return function(string) {
       string = string == null ? '' : '' + string;
       return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
     };
   };
+  // 转义函数。
   _.escape = createEscaper(escapeMap);
+  // 反转义函数。
   _.unescape = createEscaper(unescapeMap);
 
   // Traverses the children of `obj` along `path`. If a child is a function, it
@@ -2012,19 +2023,25 @@
 
   // By default, Underscore uses ERB-style template delimiters, change the
   // following template settings to use alternative delimiters.
+  // 默认情况下，undersocre使用[ERB风格的模板](http://www.stuartellis.eu/articles/erb/)，也可以自行配置。
   _.templateSettings = {
+    // 执行体通过<% %>包裹。
     evaluate: /<%([\s\S]+?)%>/g,
+    // 插入立即数通过<%= %>包裹。
     interpolate: /<%=([\s\S]+?)%>/g,
+    // 逃逸通过<%- %>包裹。
     escape: /<%-([\s\S]+?)%>/g
   };
 
   // When customizing `templateSettings`, if you don't want to define an
   // interpolation, evaluation or escaping regex, we need one that is
   // guaranteed not to match.
+  // 如果不使用 templateSettings 正则，必须有一个 noMatch 正则来保证不匹配的情况。
   var noMatch = /(.)^/;
 
   // Certain characters need to be escaped so that they can be put into a
   // string literal.
+  // 用于模板的转义字符表。
   var escapes = {
     "'": "'",
     '\\': '\\',
@@ -2034,8 +2051,9 @@
     '\u2029': 'u2029'
   };
 
+  // 用于模板的转义字符匹配正则。
   var escapeRegExp = /\\|'|\r|\n|\u2028|\u2029/g;
-
+  // 转义最终替换处理。
   var escapeChar = function(match) {
     return '\\' + escapes[match];
   };
@@ -2044,11 +2062,15 @@
   // Underscore templating handles arbitrary delimiters, preserves whitespace,
   // and correctly escapes quotes within interpolated code.
   // NB: `oldSettings` only exists for backwards compatibility.
+  // 模板引擎。
   _.template = function(text, settings, oldSettings) {
+    // 校验参数。
     if (!settings && oldSettings) settings = oldSettings;
+    // 得到模板配置。
     settings = _.defaults({}, settings, _.templateSettings);
 
     // Combine delimiters into one regular expression via alternation.
+    // 得到匹配正则。
     var matcher = RegExp([
       (settings.escape || noMatch).source,
       (settings.interpolate || noMatch).source,
@@ -2056,6 +2078,7 @@
     ].join('|') + '|$', 'g');
 
     // Compile the template source, escaping string literals appropriately.
+    // TODO
     var index = 0;
     var source = "__p+='";
     text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
