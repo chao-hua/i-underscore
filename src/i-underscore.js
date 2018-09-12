@@ -113,7 +113,7 @@
         return names.sort();
     }
 
-    // 函数判断
+    // 函数判断。
     _.isFunction = function(obj) {
         return typeof obj == 'function' || false;
     }
@@ -121,26 +121,26 @@
     // Utility Functions
     // -----------------
 
-    // 将之前的 _ 恢复，返回 underscorce 的关联关系，指向一个新的变量
+    // 将之前的 _ 恢复，返回 underscorce 的关联关系，指向一个新的变量。
     _.noConflict = function() {
         root._ = previousUnderscore;
         return this;
     }
 
-    // 支持链式调用
+    // 支持链式调用。
     _.chain = function(obj) {
-        // 根据参数，生成 underscore 对象
+        // 根据参数，生成 underscore 对象。
         var instance = _(obj);
-        // 标记是否使用链式操作
+        // 标记是否使用链式操作。
         instance._chain = true;
-        // 返回该 underscore 对象
+        // 返回该 underscore 对象。
         return instance;
     };
 
     // OOP
     // ---------------
 
-    // 根据 _chain 属性，判断结果是否需要链式调用
+    // 根据 _chain 属性，判断结果是否需要链式调用。
     var chainResult = function(instance, obj) {
         return instance._chain ? _(obj).chain() : obj;
     };
@@ -157,7 +157,7 @@
                 var args = [this._wrapped];
                 // 合并函数的参数。
                 push.apply(args, arguments);
-                // 支持链式调用
+                // 支持链式调用。
                 return chainResult(this, func.apply(_, args));
             };
         });
@@ -178,15 +178,15 @@
     // 将前面定义的 underscore 方法添加给包装过的对象，即添加到原型上。
     _.mixin(_);
 
-    // 返回 _wrapped 值
+    // 返回 _wrapped 值。
     _.prototype.value = function() {
         return this._wrapped;
     }
 
-    // 重写 valueOf、toJSON
+    // 重写 valueOf、toJSON。
     _.prototype.valueOf = _.prototype.toJSON = _.prototype.value;
 
-    // 重写 toString
+    // 重写 toString。
     _.prototype.toString = function() {
         return String(this._wrapped);
     };
